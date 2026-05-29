@@ -1,5 +1,11 @@
 # TouchBar Spectrum — KITT 红色声波频谱
 
+![platform](https://img.shields.io/badge/platform-macOS%2015%2B-blue?logo=apple&logoColor=white)
+![Swift](https://img.shields.io/badge/Swift-5-fa7343?logo=swift&logoColor=white)
+![capture](https://img.shields.io/badge/audio-Core%20Audio%20Taps-9cf)
+![Touch Bar](https://img.shields.io/badge/Touch%20Bar-KITT%20scanner-e40116)
+![release](https://img.shields.io/github/v/tag/Yixi/touchbar-music-spectrogram?label=release&color=brightgreen&sort=semver)
+
 在 MacBook Pro 的 **Touch Bar** 上实时显示系统播放音频的频谱可视化，视觉模仿《霹雳游侠》KITT 的红色声波扫描灯：从中心向两侧对称扩散的红色脉动条，带辉光、峰值缓慢回落、来回扫描律动，60fps 刷新。
 
 原生 macOS 菜单栏后台应用（无 Dock 图标），Swift + AppKit + Core Graphics。
