@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  App Sandbox is intentionally DISABLED. This is a personal/local tool that
+	  links the private DFRFoundation Touch Bar SPI and creates a Core Audio
+	  process tap + aggregate device — combinations that are not a supported,
+	  guaranteed fit for the sandbox. With the sandbox off, no extra audio-input
+	  entitlement is required (the tap still prompts via NSAudioCaptureUsageDescription),
+	  and library validation does not need to be disabled (DFRFoundation is
+	  Apple-signed). Ad-hoc / Developer-ID signing only — not for the App Store.
+	-->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+</dict>
+</plist>

@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Build products
+/TouchBarSpectrum.app/
+build/
+DerivedData/
+*.dSYM/
+
+# Xcode user-specific
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad

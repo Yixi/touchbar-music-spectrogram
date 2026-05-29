@@ -1,0 +1,39 @@
+name: TouchBarSpectrum
+
+options:
+  bundleIdPrefix: com.yixi
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Personal tool: ad-hoc signing, no team, hardened runtime off.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    ENABLE_HARDENED_RUNTIME: NO
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  TouchBarSpectrum:
+    type: application
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: TouchBarSpectrum
+        excludes:
+          - "Info.plist"
+          - "TouchBarSpectrum.entitlements"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yixi.TouchBarSpectrum
+        PRODUCT_NAME: TouchBarSpectrum
+        INFOPLIST_FILE: TouchBarSpectrum/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: TouchBarSpectrum/TouchBarSpectrum.entitlements
+        SWIFT_OBJC_BRIDGING_HEADER: TouchBarSpectrum/Support/TouchBarSpectrum-Bridging-Header.h
+        MACOSX_DEPLOYMENT_TARGET: "15.0"
