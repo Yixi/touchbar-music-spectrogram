@@ -50,6 +50,11 @@ plutil -lint "$APP/Contents/Info.plist" >/dev/null
 
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
+echo "▸ Copying resources (app icon)"
+if [[ -f TouchBarSpectrum/Resources/AppIcon.icns ]]; then
+  cp TouchBarSpectrum/Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+fi
+
 echo "▸ Ad-hoc signing with entitlements (sandbox off)"
 codesign --force --sign - --entitlements "$ENTITLEMENTS" "$APP"
 codesign --verify --verbose=2 "$APP"
