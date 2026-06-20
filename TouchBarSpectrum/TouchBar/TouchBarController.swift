@@ -25,6 +25,10 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
     private var wideView: TouchBarSpectrumView?          // strong: registered view == on-screen view
     private(set) var isExpanded = false
 
+    /// System volume captured when a swipe begins; the drag sets volume relative to it.
+    private var swipeStartVolume: Float = 0.5
+    private var swipeHasControl = false
+
     init(engine: VisualizerEngine) {
         self.engine = engine
         super.init()
@@ -92,6 +96,34 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
     @objc private func slotTapped() { toggleExpanded() }
     @objc private func wideTapped() { dismiss() }
 
+    /// Horizontal drag on the expanded bar → set system volume relative to where the
+    /// finger landed (full bar-width swipe ≈ full 0…100% range). The recognizer has
+    /// already suppressed the button's tap once it reaches `.began`, so this never
+    /// collapses the bar.
+    @objc private func wideSwiped(_ g: HorizontalPanRecognizer) {
+        switch g.state {
+        case .began:
+            swipeHasControl = SystemVolume.hasControl
+            swipeStartVolume = SystemVolume.get() ?? 0.5
+            if !swipeHasControl {
+                NSLog("[TouchBarSpectrum] Swipe-volume: output device has no settable volume.")
+            }
+            applySwipe(g)
+        case .changed:
+            applySwipe(g)
+        default:
+            break
+        }
+    }
+
+    private func applySwipe(_ g: HorizontalPanRecognizer) {
+        guard swipeHasControl, let width = g.view?.bounds.width, width > 0 else { return }
+        let frac = Float(g.translationX / width)          // full-width swipe == full range
+        let newVolume = max(0, min(1, swipeStartVolume + frac))
+        SystemVolume.set(newVolume)
+        wideView?.showVolume(newVolume)
+    }
+
     private func expand() {
         guard isSupported else { return }
         if wideBar != nil { dismiss() }     // clear any stale / OS-dismissed presentation
@@ -136,6 +168,12 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
         wideButton.isBordered = false
         wideButton.bezelStyle = .inline
         wideButton.imagePosition = .imageOnly
+        // A horizontal drag scrubs system volume; the recognizer cancels the button's
+        // tap once it starts, so swipe-to-set-volume and tap-to-collapse coexist.
+        // The view must opt into direct (Touch Bar) touches for the recognizer to fire.
+        wideButton.allowedTouchTypes = [.direct]
+        wideButton.addGestureRecognizer(
+            HorizontalPanRecognizer(target: self, action: #selector(wideSwiped(_:))))
 
         // ~1004pt fills the full-width (placement 1) Touch Bar app region; the KITT
         // render scales to whatever width it's given.

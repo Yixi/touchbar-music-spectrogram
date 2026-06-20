@@ -25,6 +25,15 @@ final class TouchBarSpectrumView: NSView {
     private var eyeDir: CGFloat = 0           // +1 / −1 moving, 0 paused
     private var audioEnv: [Float] = []        // per-segment attack/release envelope
 
+    // Volume readout: a brief baseline meter shown while/after a swipe sets volume,
+    // since Core Audio scalar writes don't raise the system HUD. Driven frame-by-frame
+    // off the engine's `apply` pushes (no own timer): hold at full, then fade.
+    private var volLevel: Float = 0
+    private var volHold = 0
+    private var volFade = 0
+    private let volHoldFrames = 40            // ~0.66s solid
+    private let volFadeFrames = 26            // ~0.43s fade-out
+
     private let preferredSize: NSSize
 
     init(preferredSize: NSSize) {
@@ -49,6 +58,16 @@ final class TouchBarSpectrumView: NSView {
         self.bands = bands
         self.eyePos = eyePos
         self.eyeDir = eyeDir
+        if volHold > 0 { volHold -= 1 } else if volFade > 0 { volFade -= 1 }
+        needsDisplay = true
+    }
+
+    /// Show the volume meter at `level` (0…1), resetting its hold/fade. Called on the
+    /// wide bar while a swipe scrubs the system volume.
+    func showVolume(_ level: Float) {
+        volLevel = max(0, min(1, level))
+        volHold = volHoldFrames
+        volFade = volFadeFrames
         needsDisplay = true
     }
 
@@ -145,5 +164,35 @@ final class TouchBarSpectrumView: NSView {
             ctx.restoreGState()
         }
         ctx.setBlendMode(.normal)
+
+        drawVolumeMeter(ctx, w: w, h: h)
+    }
+
+    /// A slim baseline volume meter pinned to the bottom edge: a dark track with a
+    /// red fill proportional to `volLevel`, plus a small tick at the level. Reads as a
+    /// distinct horizontal line against the vertical scanner bars. Only painted while
+    /// the hold/fade window from `showVolume` is open.
+    private func drawVolumeMeter(_ ctx: CGContext, w: CGFloat, h: CGFloat) {
+        let active = volHold > 0 || volFade > 0
+        guard active else { return }
+        let alpha: CGFloat = volHold > 0 ? 1 : CGFloat(volFade) / CGFloat(volFadeFrames)
+
+        let barH = max(2.5, h * 0.10)
+        let track = CGRect(x: 0, y: 0, width: w, height: barH)
+        ctx.saveGState()
+        // Dark under-track so the fill stays legible over bright bar tips.
+        ctx.setFillColor(CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.78 * alpha))
+        ctx.fill(track)
+
+        let fillW = w * CGFloat(max(0, min(1, volLevel)))
+        ctx.setFillColor(palette.ramp(min(1.15, 0.55 + 0.6 * CGFloat(volLevel))).copy(alpha: alpha)
+                         ?? palette.ramp(1.0))
+        ctx.fill(CGRect(x: 0, y: 0, width: fillW, height: barH))
+
+        // Bright cap at the current level.
+        let capW: CGFloat = 2
+        ctx.setFillColor(CGColor(srgbRed: 1, green: 0.92, blue: 0.88, alpha: alpha))
+        ctx.fill(CGRect(x: max(0, fillW - capW), y: 0, width: capW, height: barH))
+        ctx.restoreGState()
     }
 }
